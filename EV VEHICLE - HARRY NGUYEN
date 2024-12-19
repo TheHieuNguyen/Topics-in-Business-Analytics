@@ -1,0 +1,95 @@
+# Data cleaning and Preparation
+import pandas as pd
+
+# Load dataset
+data = pd.read_csv('Electric_Vehicle_Population_Data.csv')
+
+# Data cleaning
+data = data.drop_duplicates()
+data = data.dropna(subset=['Model Year', 'County', 'Electric Range', 'Base MSRP'])
+data['Base MSRP'] = data['Base MSRP'].fillna(data['Base MSRP'].median())
+data['Model Year'] = data['Model Year'].astype(int)
+data['EV_Density'] = data['County'].map(data['County'].value_counts())
+
+
+
+# VISUALIZATIONS
+#1: Top 10 Vehicle Models by Registrations
+
+top_models = data['Model'].value_counts().head(10)
+plt.figure(figsize=(10, 6))
+top_models.plot(kind='bar', color='orange')
+plt.title('Top 10 Vehicle Models by Registrations')
+plt.xlabel('Vehicle Model')
+plt.ylabel('Number of Registrations')
+plt.xticks(rotation=45)
+plt.show()
+
+#2: Top Counties by EV Registrations
+county_distribution = data['County'].value_counts().head(10)
+plt.figure(figsize=(10, 6))
+county_distribution.plot(kind='barh', color='skyblue')
+plt.title('Top Counties by EV Registrations')
+plt.xlabel('Number of Registrations')
+plt.ylabel('County')
+plt.show()
+
+#3: EV Registrations Over Time
+filtered_data = data[data['Model Year'] < 2025]
+registrations_over_time = filtered_data['Model Year'].value_counts().sort_index()
+plt.figure(figsize=(10, 6))
+registrations_over_time.plot(kind='line', marker='o', color='green')
+plt.title('EV Registrations Over Time (Excluding 2025)')
+plt.xlabel('Year')
+plt.ylabel('Number of Registrations')
+plt.grid(True)
+plt.show()
+
+# REGRESSION ANALYSIS
+# Linear Regression
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+X = data[['Electric Range', 'Base MSRP', 'Model Year']]
+y = data['EV_Density']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+print("Mean Squared Error:", mse)
+print("R-squared:", r2)
+
+#RIDGE & LASSO REGRESSION
+from sklearn.linear_model import Ridge, Lasso
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Ridge Regression
+ridge = Ridge(alpha=1.0)
+ridge.fit(X_scaled, y)
+ridge_coefficients = ridge.coef_
+
+# LASSO Regression
+lasso = Lasso(alpha=0.1)
+lasso.fit(X_scaled, y)
+lasso_coefficients = lasso.coef_
+
+print("Ridge Coefficients:", ridge_coefficients)
+print("LASSO Coefficients:", lasso_coefficients)
+
+# RANDOM FOREST REGRESSION
+from sklearn.ensemble import RandomForestRegressor
+
+rf = RandomForestRegressor(n_estimators=100, random_state=42)
+rf.fit(X, y)
+rf_feature_importances = rf.feature_importances_
+
+print("Random Forest Feature Importances:", rf_feature_importances)

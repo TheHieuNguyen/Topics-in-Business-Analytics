@@ -2,7 +2,7 @@
 import pandas as pd
 
 # Load dataset
-data = pd.read_csv('Electric_Vehicle_Population_Data.csv')
+data = pd.read_csv('Electric_Vehicle_Population_Data.csv') #Replace your path here
 
 # Data cleaning
 data = data.drop_duplicates()
